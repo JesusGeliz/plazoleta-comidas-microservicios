@@ -6,6 +6,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,5 +29,10 @@ public class RestauranteController {
         String token = (String) autenticacion.getCredentials();
         Long id = restauranteService.crearRestaurante(request, token);
         return ResponseEntity.status(HttpStatus.CREATED).body("Restaurante creado con id " + id);
+    }
+
+    @GetMapping("/{id}/propietario")
+    public ResponseEntity<Long> obtenerIdPropietario(@PathVariable Long id) {
+        return ResponseEntity.ok(restauranteService.obtenerIdPropietario(id));
     }
 }

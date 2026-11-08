@@ -34,4 +34,10 @@ public class RestauranteService {
 
         return restauranteRepository.save(restaurante).getId();
     }
+
+    public Long obtenerIdPropietario(Long idRestaurante) {
+        Restaurante restaurante = restauranteRepository.findById(idRestaurante)
+                .orElseThrow(() -> new IllegalArgumentException("El restaurante no existe"));
+        return restaurante.getIdPropietario();
+    }
 }
