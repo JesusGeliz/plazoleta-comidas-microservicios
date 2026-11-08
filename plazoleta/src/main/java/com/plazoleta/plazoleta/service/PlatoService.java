@@ -2,11 +2,18 @@ package com.plazoleta.plazoleta.service;
 
 import com.plazoleta.plazoleta.dto.PlatoModificarRequest;
 import com.plazoleta.plazoleta.dto.PlatoRequest;
+import com.plazoleta.plazoleta.dto.PlatoResumen;
 import com.plazoleta.plazoleta.entity.Plato;
 import com.plazoleta.plazoleta.entity.Restaurante;
 import com.plazoleta.plazoleta.repository.PlatoRepository;
 import com.plazoleta.plazoleta.repository.RestauranteRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class PlatoService {
@@ -51,6 +58,34 @@ public class PlatoService {
         Plato plato = buscarPlatoDelPropietario(idPlato, idPropietario);
         plato.setActivo(activo);
         platoRepository.save(plato);
+    }
+
+    public List<PlatoResumen> listarPlatos(Long idRestaurante, String categoria, int pagina, int tamanio) {
+
+        if (!restauranteRepository.existsById(idRestaurante)) {
+            throw new IllegalArgumentException("El restaurante no existe");
+        }
+        if (pagina < 0) {
+            throw new IllegalArgumentException("La página no puede ser negativa");
+        }
+        if (tamanio < 1) {
+            throw new IllegalArgumentException("El tamaño de la página debe ser mayor a cero");
+        }
+
+        Pageable paginacion = PageRequest.of(pagina, tamanio, Sort.by("nombre").ascending());
+
+        Page<Plato> platos;
+        if (categoria == null || categoria.isBlank()) {
+            platos = platoRepository.findByIdRestauranteAndActivoTrue(idRestaurante, paginacion);
+        } else {
+            platos = platoRepository.findByIdRestauranteAndActivoTrueAndCategoriaIgnoreCase(
+                    idRestaurante, categoria, paginacion);
+        }
+
+        return platos.getContent().stream()
+                .map(plato -> new PlatoResumen(plato.getId(), plato.getNombre(), plato.getPrecio(),
+                        plato.getDescripcion(), plato.getUrlImagen(), plato.getCategoria()))
+                .toList();
     }
 
     private Plato buscarPlatoDelPropietario(Long idPlato, Long idPropietario) {
