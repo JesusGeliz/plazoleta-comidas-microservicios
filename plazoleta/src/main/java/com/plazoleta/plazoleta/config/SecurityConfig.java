@@ -21,6 +21,7 @@ public class SecurityConfig {
                 .exceptionHandling(e -> e.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/restaurantes").hasRole("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.POST, "/platos").hasRole("PROPIETARIO")
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

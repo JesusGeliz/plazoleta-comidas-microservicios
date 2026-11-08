@@ -59,7 +59,7 @@ public class UsuarioService {
             throw new CredencialesInvalidasException("Credenciales inválidas");
         }
 
-        return jwtService.generarToken(usuario.getCorreo(), usuario.getRol().name());
+        return jwtService.generarToken(usuario.getId(), usuario.getCorreo(), usuario.getRol().name());
     }
 
     public String obtenerRol(Long id) {
