@@ -61,4 +61,10 @@ public class UsuarioService {
 
         return jwtService.generarToken(usuario.getCorreo(), usuario.getRol().name());
     }
+
+    public String obtenerRol(Long id) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("El usuario no existe"));
+        return usuario.getRol().name();
+    }
 }

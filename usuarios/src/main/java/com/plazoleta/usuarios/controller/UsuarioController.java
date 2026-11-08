@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 @RestController
 @RequestMapping("/usuarios")
@@ -31,5 +33,10 @@ public class UsuarioController {
     public ResponseEntity<String> login(@Valid @RequestBody LoginRequest request) {
         String token = usuarioService.login(request);
         return ResponseEntity.ok(token);
+    }
+
+    @GetMapping("/{id}/rol")
+    public ResponseEntity<String> obtenerRol(@PathVariable Long id) {
+        return ResponseEntity.ok(usuarioService.obtenerRol(id));
     }
 }
