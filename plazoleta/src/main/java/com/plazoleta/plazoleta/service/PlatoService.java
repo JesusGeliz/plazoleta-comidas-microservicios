@@ -1,5 +1,6 @@
 package com.plazoleta.plazoleta.service;
 
+import com.plazoleta.plazoleta.dto.PlatoModificarRequest;
 import com.plazoleta.plazoleta.dto.PlatoRequest;
 import com.plazoleta.plazoleta.entity.Plato;
 import com.plazoleta.plazoleta.entity.Restaurante;
@@ -37,5 +38,22 @@ public class PlatoService {
         plato.setActivo(true);
 
         return platoRepository.save(plato).getId();
+    }
+
+    public void modificarPlato(Long idPlato, PlatoModificarRequest request, Long idPropietario) {
+
+        Plato plato = platoRepository.findById(idPlato)
+                .orElseThrow(() -> new IllegalArgumentException("El plato no existe"));
+
+        Restaurante restaurante = restauranteRepository.findById(plato.getIdRestaurante())
+                .orElseThrow(() -> new IllegalArgumentException("El restaurante no existe"));
+
+        if (!restaurante.getIdPropietario().equals(idPropietario)) {
+            throw new IllegalArgumentException("El plato no pertenece a un restaurante del propietario autenticado");
+        }
+
+        plato.setPrecio(request.getPrecio());
+        plato.setDescripcion(request.getDescripcion());
+        platoRepository.save(plato);
     }
 }
