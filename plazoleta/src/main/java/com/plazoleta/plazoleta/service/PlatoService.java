@@ -41,7 +41,19 @@ public class PlatoService {
     }
 
     public void modificarPlato(Long idPlato, PlatoModificarRequest request, Long idPropietario) {
+        Plato plato = buscarPlatoDelPropietario(idPlato, idPropietario);
+        plato.setPrecio(request.getPrecio());
+        plato.setDescripcion(request.getDescripcion());
+        platoRepository.save(plato);
+    }
 
+    public void cambiarEstado(Long idPlato, Boolean activo, Long idPropietario) {
+        Plato plato = buscarPlatoDelPropietario(idPlato, idPropietario);
+        plato.setActivo(activo);
+        platoRepository.save(plato);
+    }
+
+    private Plato buscarPlatoDelPropietario(Long idPlato, Long idPropietario) {
         Plato plato = platoRepository.findById(idPlato)
                 .orElseThrow(() -> new IllegalArgumentException("El plato no existe"));
 
@@ -52,8 +64,6 @@ public class PlatoService {
             throw new IllegalArgumentException("El plato no pertenece a un restaurante del propietario autenticado");
         }
 
-        plato.setPrecio(request.getPrecio());
-        plato.setDescripcion(request.getDescripcion());
-        platoRepository.save(plato);
+        return plato;
     }
 }

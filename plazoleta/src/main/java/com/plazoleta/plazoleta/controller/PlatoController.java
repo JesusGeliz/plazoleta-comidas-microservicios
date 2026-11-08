@@ -1,5 +1,6 @@
 package com.plazoleta.plazoleta.controller;
 
+import com.plazoleta.plazoleta.dto.PlatoEstadoRequest;
 import com.plazoleta.plazoleta.dto.PlatoModificarRequest;
 import com.plazoleta.plazoleta.dto.PlatoRequest;
 import com.plazoleta.plazoleta.service.PlatoService;
@@ -7,6 +8,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -39,5 +41,14 @@ public class PlatoController {
         Long idPropietario = (Long) autenticacion.getPrincipal();
         platoService.modificarPlato(id, request, idPropietario);
         return ResponseEntity.ok("Plato modificado correctamente");
+    }
+
+    @PatchMapping("/{id}/estado")
+    public ResponseEntity<String> cambiarEstado(@PathVariable Long id,
+                                                @Valid @RequestBody PlatoEstadoRequest request,
+                                                Authentication autenticacion) {
+        Long idPropietario = (Long) autenticacion.getPrincipal();
+        platoService.cambiarEstado(id, request.getActivo(), idPropietario);
+        return ResponseEntity.ok("Estado del plato actualizado");
     }
 }
