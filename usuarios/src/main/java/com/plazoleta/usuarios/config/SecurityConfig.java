@@ -30,6 +30,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                         .requestMatchers(HttpMethod.POST, "/usuarios/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/usuarios/clientes").permitAll()
                         .requestMatchers(HttpMethod.POST, "/usuarios/propietarios").hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.POST, "/usuarios/empleados").hasRole("PROPIETARIO")
                         .anyRequest().authenticated())

@@ -1,5 +1,6 @@
 package com.plazoleta.usuarios.controller;
 
+import com.plazoleta.usuarios.dto.ClienteRequest;
 import com.plazoleta.usuarios.dto.EmpleadoRequest;
 import com.plazoleta.usuarios.dto.LoginRequest;
 import com.plazoleta.usuarios.dto.PropietarioRequest;
@@ -38,6 +39,12 @@ public class UsuarioController {
         String token = (String) autenticacion.getCredentials();
         Long id = usuarioService.crearEmpleado(request, idPropietario, token);
         return ResponseEntity.status(HttpStatus.CREATED).body("Empleado creado con id " + id);
+    }
+
+    @PostMapping("/clientes")
+    public ResponseEntity<String> crearCliente(@Valid @RequestBody ClienteRequest request) {
+        Long id = usuarioService.crearCliente(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body("Cliente creado con id " + id);
     }
 
     @PostMapping("/login")

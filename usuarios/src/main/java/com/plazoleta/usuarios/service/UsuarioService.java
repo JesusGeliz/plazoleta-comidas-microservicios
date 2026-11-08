@@ -1,6 +1,7 @@
 package com.plazoleta.usuarios.service;
 
 import com.plazoleta.usuarios.config.PlazoletaClient;
+import com.plazoleta.usuarios.dto.ClienteRequest;
 import com.plazoleta.usuarios.dto.EmpleadoRequest;
 import com.plazoleta.usuarios.dto.LoginRequest;
 import com.plazoleta.usuarios.dto.PropietarioRequest;
@@ -78,6 +79,24 @@ public class UsuarioService {
         empleado.setIdRestaurante(request.getIdRestaurante());
 
         return usuarioRepository.save(empleado).getId();
+    }
+
+    public Long crearCliente(ClienteRequest request) {
+
+        if (usuarioRepository.existsByCorreo(request.getCorreo())) {
+            throw new IllegalArgumentException("El correo ya está registrado");
+        }
+
+        Usuario cliente = new Usuario();
+        cliente.setNombre(request.getNombre());
+        cliente.setApellido(request.getApellido());
+        cliente.setDocumento(request.getDocumento());
+        cliente.setCelular(request.getCelular());
+        cliente.setCorreo(request.getCorreo());
+        cliente.setClave(passwordEncoder.encode(request.getClave()));
+        cliente.setRol(Rol.CLIENTE);
+
+        return usuarioRepository.save(cliente).getId();
     }
 
     public String login(LoginRequest request) {
