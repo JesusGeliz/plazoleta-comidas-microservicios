@@ -23,14 +23,53 @@ public class Pedido {
     @Enumerated(EnumType.STRING)
     private EstadoPedido estado;
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public Long getIdCliente() { return idCliente; }
-    public void setIdCliente(Long idCliente) { this.idCliente = idCliente; }
-    public Long getIdRestaurante() { return idRestaurante; }
-    public void setIdRestaurante(Long idRestaurante) { this.idRestaurante = idRestaurante; }
-    public Long getIdEmpleado() { return idEmpleado; }
-    public void setIdEmpleado(Long idEmpleado) { this.idEmpleado = idEmpleado; }
-    public EstadoPedido getEstado() { return estado; }
-    public void setEstado(EstadoPedido estado) { this.estado = estado; }
+    private String pin;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Long getIdCliente() {
+        return idCliente;
+    }
+
+    public void setIdCliente(Long idCliente) {
+        this.idCliente = idCliente;
+    }
+
+    public Long getIdRestaurante() {
+        return idRestaurante;
+    }
+
+    public void setIdRestaurante(Long idRestaurante) {
+        this.idRestaurante = idRestaurante;
+    }
+
+    public Long getIdEmpleado() {
+        return idEmpleado;
+    }
+
+    public void setIdEmpleado(Long idEmpleado) {
+        this.idEmpleado = idEmpleado;
+    }
+
+    public EstadoPedido getEstado() {
+        return estado;
+    }
+
+    public void setEstado(EstadoPedido estado) {
+        this.estado = estado;
+    }
+
+    public String getPin() {
+        return pin;
+    }
+
+    public void setPin(String pin) {
+        this.pin = pin;
+    }
 }

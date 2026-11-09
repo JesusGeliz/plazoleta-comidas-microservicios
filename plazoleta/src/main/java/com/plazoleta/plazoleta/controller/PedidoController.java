@@ -56,4 +56,12 @@ public class PedidoController {
         pedidoService.asignarPedido(id, idEmpleado, token);
         return ResponseEntity.ok("Pedido asignado, estado EN_PREPARACION");
     }
+
+    @PatchMapping("/{id}/listo")
+    public ResponseEntity<String> marcarPedidoListo(@PathVariable Long id, Authentication autenticacion) {
+        Long idEmpleado = (Long) autenticacion.getPrincipal();
+        String token = (String) autenticacion.getCredentials();
+        pedidoService.marcarPedidoListo(id, idEmpleado, token);
+        return ResponseEntity.ok("Pedido marcado como LISTO, PIN generado y SMS enviado");
+    }
 }

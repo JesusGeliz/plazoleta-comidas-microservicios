@@ -1,0 +1,30 @@
+package com.plazoleta.notificaciones.dto;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+
+public class SmsRequest {
+
+    @NotBlank(message = "El celular es obligatorio")
+    @Pattern(regexp = "^\\+?[0-9]{10,13}$", message = "Formato de celular inválido")
+    private String celular;
+
+    @NotBlank(message = "El mensaje es obligatorio")
+    private String mensaje;
+
+    public String getCelular() {
+        return celular;
+    }
+
+    public void setCelular(String celular) {
+        this.celular = celular;
+    }
+
+    public String getMensaje() {
+        return mensaje;
+    }
+
+    public void setMensaje(String mensaje) {
+        this.mensaje = mensaje;
+    }
+}

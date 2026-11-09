@@ -62,4 +62,9 @@ public class UsuarioController {
     public ResponseEntity<Long> obtenerIdRestaurante(@PathVariable Long id) {
         return ResponseEntity.ok(usuarioService.obtenerIdRestaurante(id));
     }
+
+    @GetMapping("/{id}/celular")
+    public ResponseEntity<String> obtenerCelular(@PathVariable Long id) {
+        return ResponseEntity.ok(usuarioService.obtenerCelular(id));
+    }
 }
