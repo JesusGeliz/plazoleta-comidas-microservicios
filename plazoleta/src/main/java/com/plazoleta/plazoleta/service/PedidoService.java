@@ -1,5 +1,6 @@
 package com.plazoleta.plazoleta.service;
 
+import com.plazoleta.plazoleta.config.TrazabilidadClient;
 import com.plazoleta.plazoleta.config.UsuarioClient;
 import com.plazoleta.plazoleta.dto.PedidoPlatoRequest;
 import com.plazoleta.plazoleta.dto.PedidoRequest;
@@ -28,19 +29,21 @@ public class PedidoService {
     private final PlatoRepository platoRepository;
     private final RestauranteRepository restauranteRepository;
     private final UsuarioClient usuarioClient;
+    private final TrazabilidadClient trazabilidadClient;
 
     public PedidoService(PedidoRepository pedidoRepository, PedidoPlatoRepository pedidoPlatoRepository,
                          PlatoRepository platoRepository, RestauranteRepository restauranteRepository,
-                         UsuarioClient usuarioClient) {
+                         UsuarioClient usuarioClient, TrazabilidadClient trazabilidadClient) {
         this.pedidoRepository = pedidoRepository;
         this.pedidoPlatoRepository = pedidoPlatoRepository;
         this.platoRepository = platoRepository;
         this.restauranteRepository = restauranteRepository;
         this.usuarioClient = usuarioClient;
+        this.trazabilidadClient = trazabilidadClient;
     }
 
     @Transactional
-    public Long crearPedido(PedidoRequest request, Long idCliente) {
+    public Long crearPedido(PedidoRequest request, Long idCliente, String token) {
 
         if (!restauranteRepository.existsById(request.getIdRestaurante())) {
             throw new IllegalArgumentException("El restaurante no existe");
@@ -78,6 +81,9 @@ public class PedidoService {
             pedidoPlatoRepository.save(pedidoPlato);
         }
 
+        trazabilidadClient.registrar(guardado.getId(), idCliente, guardado.getIdRestaurante(),
+                null, null, EstadoPedido.PENDIENTE.name(), token);
+
         return guardado.getId();
     }
 
@@ -100,5 +106,28 @@ public class PedidoService {
                 .map(pedido -> new PedidoResumen(pedido.getId(), pedido.getIdCliente(), pedido.getEstado(),
                         pedidoPlatoRepository.findByIdPedido(pedido.getId())))
                 .toList();
+    }
+
+    @Transactional
+    public void asignarPedido(Long idPedido, Long idEmpleado, String token) {
+
+        Pedido pedido = pedidoRepository.findById(idPedido)
+                .orElseThrow(() -> new IllegalArgumentException("El pedido no existe"));
+
+        Long idRestauranteEmpleado = usuarioClient.obtenerIdRestaurante(idEmpleado, token);
+        if (!pedido.getIdRestaurante().equals(idRestauranteEmpleado)) {
+            throw new IllegalArgumentException("El pedido no pertenece al restaurante del empleado");
+        }
+
+        if (pedido.getEstado() != EstadoPedido.PENDIENTE) {
+            throw new IllegalArgumentException("Solo se pueden asignar pedidos en estado Pendiente");
+        }
+
+        pedido.setIdEmpleado(idEmpleado);
+        pedido.setEstado(EstadoPedido.EN_PREPARACION);
+        pedidoRepository.save(pedido);
+
+        trazabilidadClient.registrar(pedido.getId(), pedido.getIdCliente(), pedido.getIdRestaurante(),
+                idEmpleado, EstadoPedido.PENDIENTE.name(), EstadoPedido.EN_PREPARACION.name(), token);
     }
 }

@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,7 +33,8 @@ public class PedidoController {
     public ResponseEntity<String> crearPedido(@Valid @RequestBody PedidoRequest request,
                                               Authentication autenticacion) {
         Long idCliente = (Long) autenticacion.getPrincipal();
-        Long id = pedidoService.crearPedido(request, idCliente);
+        String token = (String) autenticacion.getCredentials();
+        Long id = pedidoService.crearPedido(request, idCliente, token);
         return ResponseEntity.status(HttpStatus.CREATED).body("Pedido creado con id " + id + ", estado PENDIENTE");
     }
 
@@ -44,5 +47,13 @@ public class PedidoController {
         Long idEmpleado = (Long) autenticacion.getPrincipal();
         String token = (String) autenticacion.getCredentials();
         return ResponseEntity.ok(pedidoService.listarPedidos(estado, pagina, tamanio, idEmpleado, token));
+    }
+
+    @PatchMapping("/{id}/asignar")
+    public ResponseEntity<String> asignarPedido(@PathVariable Long id, Authentication autenticacion) {
+        Long idEmpleado = (Long) autenticacion.getPrincipal();
+        String token = (String) autenticacion.getCredentials();
+        pedidoService.asignarPedido(id, idEmpleado, token);
+        return ResponseEntity.ok("Pedido asignado, estado EN_PREPARACION");
     }
 }
