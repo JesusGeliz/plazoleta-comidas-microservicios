@@ -127,4 +127,10 @@ public class UsuarioService {
 
         return usuario.getIdRestaurante();
     }
+
+    public String obtenerCelular(Long id) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("El usuario no existe"));
+        return usuario.getCelular();
+    }
 }

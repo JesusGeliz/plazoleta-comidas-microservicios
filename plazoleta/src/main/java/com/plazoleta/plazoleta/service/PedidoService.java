@@ -1,10 +1,12 @@
 package com.plazoleta.plazoleta.service;
 
+import com.plazoleta.plazoleta.config.NotificacionClient;
 import com.plazoleta.plazoleta.config.TrazabilidadClient;
 import com.plazoleta.plazoleta.config.UsuarioClient;
 import com.plazoleta.plazoleta.dto.PedidoPlatoRequest;
 import com.plazoleta.plazoleta.dto.PedidoRequest;
 import com.plazoleta.plazoleta.dto.PedidoResumen;
+import com.plazoleta.plazoleta.dto.SmsRequest;
 import com.plazoleta.plazoleta.entity.EstadoPedido;
 import com.plazoleta.plazoleta.entity.Pedido;
 import com.plazoleta.plazoleta.entity.PedidoPlato;
@@ -20,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Random;
 
 @Service
 public class PedidoService {
@@ -30,16 +33,19 @@ public class PedidoService {
     private final RestauranteRepository restauranteRepository;
     private final UsuarioClient usuarioClient;
     private final TrazabilidadClient trazabilidadClient;
+    private final NotificacionClient notificacionClient;
 
     public PedidoService(PedidoRepository pedidoRepository, PedidoPlatoRepository pedidoPlatoRepository,
                          PlatoRepository platoRepository, RestauranteRepository restauranteRepository,
-                         UsuarioClient usuarioClient, TrazabilidadClient trazabilidadClient) {
+                         UsuarioClient usuarioClient, TrazabilidadClient trazabilidadClient,
+                         NotificacionClient notificacionClient) {
         this.pedidoRepository = pedidoRepository;
         this.pedidoPlatoRepository = pedidoPlatoRepository;
         this.platoRepository = platoRepository;
         this.restauranteRepository = restauranteRepository;
         this.usuarioClient = usuarioClient;
         this.trazabilidadClient = trazabilidadClient;
+        this.notificacionClient = notificacionClient;
     }
 
     @Transactional
@@ -129,5 +135,33 @@ public class PedidoService {
 
         trazabilidadClient.registrar(pedido.getId(), pedido.getIdCliente(), pedido.getIdRestaurante(),
                 idEmpleado, EstadoPedido.PENDIENTE.name(), EstadoPedido.EN_PREPARACION.name(), token);
+    }
+
+    @Transactional
+    public void marcarPedidoListo(Long idPedido, Long idEmpleado, String token) {
+
+        Pedido pedido = pedidoRepository.findById(idPedido)
+                .orElseThrow(() -> new IllegalArgumentException("El pedido no existe"));
+
+        Long idRestauranteEmpleado = usuarioClient.obtenerIdRestaurante(idEmpleado, token);
+        if (!pedido.getIdRestaurante().equals(idRestauranteEmpleado)) {
+            throw new IllegalArgumentException("El pedido no pertenece al restaurante del empleado");
+        }
+
+        if (pedido.getEstado() != EstadoPedido.EN_PREPARACION) {
+            throw new IllegalArgumentException("El pedido debe estar en preparación para marcarse como listo");
+        }
+
+        String pin = String.format("%06d", new Random().nextInt(1000000));
+        pedido.setPin(pin);
+        pedido.setEstado(EstadoPedido.LISTO);
+        pedidoRepository.save(pedido);
+
+        trazabilidadClient.registrar(pedido.getId(), pedido.getIdCliente(), pedido.getIdRestaurante(),
+                idEmpleado, EstadoPedido.EN_PREPARACION.name(), EstadoPedido.LISTO.name(), token);
+
+        String celular = usuarioClient.obtenerCelular(pedido.getIdCliente(), token);
+        String mensaje = "Tu pedido está listo. Tu PIN de seguridad es: " + pin;
+        notificacionClient.enviarSms(new SmsRequest(celular, mensaje), token);
     }
 }
