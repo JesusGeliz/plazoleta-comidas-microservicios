@@ -116,4 +116,15 @@ public class UsuarioService {
                 .orElseThrow(() -> new IllegalArgumentException("El usuario no existe"));
         return usuario.getRol().name();
     }
+
+    public Long obtenerIdRestaurante(Long id) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("El usuario no existe"));
+
+        if (usuario.getIdRestaurante() == null) {
+            throw new IllegalArgumentException("El usuario no está asociado a un restaurante");
+        }
+
+        return usuario.getIdRestaurante();
+    }
 }
