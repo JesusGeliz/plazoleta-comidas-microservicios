@@ -1,5 +1,8 @@
 package com.plazoleta.usuarios.service;
 
+import com.plazoleta.usuarios.config.PlazoletaClient;
+import com.plazoleta.usuarios.dto.ClienteRequest;
+import com.plazoleta.usuarios.dto.EmpleadoRequest;
 import com.plazoleta.usuarios.dto.LoginRequest;
 import com.plazoleta.usuarios.dto.PropietarioRequest;
 import com.plazoleta.usuarios.entity.Rol;
@@ -19,11 +22,14 @@ public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final PlazoletaClient plazoletaClient;
 
-    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
+    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder,
+                          JwtService jwtService, PlazoletaClient plazoletaClient) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.plazoletaClient = plazoletaClient;
     }
 
     public Long crearPropietario(PropietarioRequest request) {
@@ -50,6 +56,49 @@ public class UsuarioService {
         return usuarioRepository.save(usuario).getId();
     }
 
+    public Long crearEmpleado(EmpleadoRequest request, Long idPropietario, String token) {
+
+        if (usuarioRepository.existsByCorreo(request.getCorreo())) {
+            throw new IllegalArgumentException("El correo ya está registrado");
+        }
+
+        Long idDuenio = plazoletaClient.obtenerIdPropietario(request.getIdRestaurante(), token);
+        if (!idDuenio.equals(idPropietario)) {
+            throw new IllegalArgumentException("El restaurante no pertenece al propietario autenticado");
+        }
+
+        Usuario empleado = new Usuario();
+        empleado.setNombre(request.getNombre());
+        empleado.setApellido(request.getApellido());
+        empleado.setDocumento(request.getDocumento());
+        empleado.setCelular(request.getCelular());
+        empleado.setFechaNacimiento(request.getFechaNacimiento());
+        empleado.setCorreo(request.getCorreo());
+        empleado.setClave(passwordEncoder.encode(request.getClave()));
+        empleado.setRol(Rol.EMPLEADO);
+        empleado.setIdRestaurante(request.getIdRestaurante());
+
+        return usuarioRepository.save(empleado).getId();
+    }
+
+    public Long crearCliente(ClienteRequest request) {
+
+        if (usuarioRepository.existsByCorreo(request.getCorreo())) {
+            throw new IllegalArgumentException("El correo ya está registrado");
+        }
+
+        Usuario cliente = new Usuario();
+        cliente.setNombre(request.getNombre());
+        cliente.setApellido(request.getApellido());
+        cliente.setDocumento(request.getDocumento());
+        cliente.setCelular(request.getCelular());
+        cliente.setCorreo(request.getCorreo());
+        cliente.setClave(passwordEncoder.encode(request.getClave()));
+        cliente.setRol(Rol.CLIENTE);
+
+        return usuarioRepository.save(cliente).getId();
+    }
+
     public String login(LoginRequest request) {
 
         Usuario usuario = usuarioRepository.findByCorreo(request.getCorreo())
@@ -66,5 +115,16 @@ public class UsuarioService {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("El usuario no existe"));
         return usuario.getRol().name();
+    }
+
+    public Long obtenerIdRestaurante(Long id) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("El usuario no existe"));
+
+        if (usuario.getIdRestaurante() == null) {
+            throw new IllegalArgumentException("El usuario no está asociado a un restaurante");
+        }
+
+        return usuario.getIdRestaurante();
     }
 }
