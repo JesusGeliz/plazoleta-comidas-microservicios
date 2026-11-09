@@ -57,4 +57,9 @@ public class UsuarioController {
     public ResponseEntity<String> obtenerRol(@PathVariable Long id) {
         return ResponseEntity.ok(usuarioService.obtenerRol(id));
     }
+
+    @GetMapping("/{id}/restaurante")
+    public ResponseEntity<Long> obtenerIdRestaurante(@PathVariable Long id) {
+        return ResponseEntity.ok(usuarioService.obtenerIdRestaurante(id));
+    }
 }

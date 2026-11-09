@@ -25,4 +25,16 @@ public class UsuarioClient {
             throw new IllegalArgumentException("El usuario asociado no existe");
         }
     }
+
+    public Long obtenerIdRestaurante(Long idUsuario, String token) {
+        try {
+            return restClient.get()
+                    .uri("/usuarios/{id}/restaurante", idUsuario)
+                    .header("Authorization", "Bearer " + token)
+                    .retrieve()
+                    .body(Long.class);
+        } catch (HttpClientErrorException e) {
+            throw new IllegalArgumentException("El empleado no está asociado a un restaurante");
+        }
+    }
 }
