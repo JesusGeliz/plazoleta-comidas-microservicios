@@ -2,32 +2,27 @@ package com.plazoleta.notificaciones.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 
 @Service
 public class JwtService {
 
-    @Value("${jwt.secret}")
-    private String secreto;
+    private final SecretKey clave;
 
-    public String extraerCorreo(String token) {
-        return obtenerClaims(token).getSubject();
+    public JwtService(@Value("${jwt.secret}") String secreto) {
+        this.clave = Keys.hmacShaKeyFor(secreto.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String extraerRol(String token) {
-        return obtenerClaims(token).get("rol", String.class);
-    }
-
-    public Long extraerId(String token) {
-        return obtenerClaims(token).get("id", Long.class);
-    }
-
-    private Claims obtenerClaims(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(secreto.getBytes())
+    public Claims leerToken(String token) {
+        return Jwts.parser()
+                .verifyWith(clave)
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
     }
 }

@@ -133,4 +133,5 @@ public class UsuarioService {
                 .orElseThrow(() -> new IllegalArgumentException("El usuario no existe"));
         return usuario.getCelular();
     }
+
 }
