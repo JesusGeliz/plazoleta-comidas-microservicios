@@ -1,5 +1,7 @@
 package com.plazoleta.notificaciones.security;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,21 +25,26 @@ public class JwtFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
-        String cabecera = request.getHeader("Authorization");
-        if (cabecera != null && cabecera.startsWith("Bearer ")) {
-            String token = cabecera.substring(7);
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
+
+        String encabezado = request.getHeader("Authorization");
+
+        if (encabezado != null && encabezado.startsWith("Bearer ")) {
             try {
-                Long id = jwtService.extraerId(token);
-                String rol = jwtService.extraerRol(token);
+                Claims datos = jwtService.leerToken(encabezado.substring(7));
+                String rol = datos.get("rol", String.class);
+                Long id = datos.get("id", Number.class).longValue();
+
                 UsernamePasswordAuthenticationToken autenticacion = new UsernamePasswordAuthenticationToken(
-                        id, token, List.of(new SimpleGrantedAuthority("ROLE_" + rol)));
+                        id, encabezado.substring(7), List.of(new SimpleGrantedAuthority("ROLE_" + rol)));
+
                 SecurityContextHolder.getContext().setAuthentication(autenticacion);
-            } catch (Exception e) {
-                SecurityContextHolder.clearContext();
+            } catch (JwtException | IllegalArgumentException e) {
+                // Token inválido o vencido: no se autentica a nadie
             }
         }
+
         filterChain.doFilter(request, response);
     }
 }

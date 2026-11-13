@@ -67,4 +67,5 @@ public class UsuarioController {
     public ResponseEntity<String> obtenerCelular(@PathVariable Long id) {
         return ResponseEntity.ok(usuarioService.obtenerCelular(id));
     }
+
 }

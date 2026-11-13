@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.HttpClientErrorException;
+
 
 @Component
 public class UsuarioClient {
@@ -30,11 +32,17 @@ public class UsuarioClient {
                 .body(Long.class);
     }
 
-    public String obtenerCelular(Long id, String token) {
-        return restClient.get()
-                .uri("/usuarios/{id}/celular", id)
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
-                .retrieve()
-                .body(String.class);
+    public String obtenerCelular(Long idUsuario, String token) {
+        try {
+            return restClient.get()
+                    .uri("/usuarios/{id}/celular", idUsuario)
+                    .header("Authorization", "Bearer " + token)
+                    .retrieve()
+                    .body(String.class);
+        } catch (HttpClientErrorException e) {
+            throw new IllegalArgumentException("No se pudo obtener el celular del cliente");
+        }
     }
+
+
 }
