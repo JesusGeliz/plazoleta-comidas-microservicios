@@ -18,6 +18,8 @@ public class Pedido {
 
     private Long idCliente;
     private Long idRestaurante;
+    private Long idEmpleado;
+    private String pin;
 
     @Enumerated(EnumType.STRING)
     private EstadoPedido estado;
@@ -28,6 +30,10 @@ public class Pedido {
     public void setIdCliente(Long idCliente) { this.idCliente = idCliente; }
     public Long getIdRestaurante() { return idRestaurante; }
     public void setIdRestaurante(Long idRestaurante) { this.idRestaurante = idRestaurante; }
+    public Long getIdEmpleado() { return idEmpleado; }
+    public void setIdEmpleado(Long idEmpleado) { this.idEmpleado = idEmpleado; }
+    public String getPin() { return pin; }
+    public void setPin(String pin) { this.pin = pin; }
     public EstadoPedido getEstado() { return estado; }
     public void setEstado(EstadoPedido estado) { this.estado = estado; }
 }

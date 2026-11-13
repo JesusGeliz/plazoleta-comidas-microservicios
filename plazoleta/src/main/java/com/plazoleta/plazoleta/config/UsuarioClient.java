@@ -1,9 +1,11 @@
 package com.plazoleta.plazoleta.config;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.HttpClientErrorException;
+
 
 @Component
 public class UsuarioClient {
@@ -14,27 +16,33 @@ public class UsuarioClient {
         this.restClient = RestClient.builder().baseUrl(url).build();
     }
 
-    public String obtenerRol(Long idUsuario, String token) {
+    public String obtenerRol(Long id, String token) {
+        return restClient.get()
+                .uri("/usuarios/{id}/rol", id)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .retrieve()
+                .body(String.class);
+    }
+
+    public Long obtenerIdRestaurante(Long id, String token) {
+        return restClient.get()
+                .uri("/usuarios/{id}/restaurante", id)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .retrieve()
+                .body(Long.class);
+    }
+
+    public String obtenerCelular(Long idUsuario, String token) {
         try {
             return restClient.get()
-                    .uri("/usuarios/{id}/rol", idUsuario)
+                    .uri("/usuarios/{id}/celular", idUsuario)
                     .header("Authorization", "Bearer " + token)
                     .retrieve()
                     .body(String.class);
         } catch (HttpClientErrorException e) {
-            throw new IllegalArgumentException("El usuario asociado no existe");
+            throw new IllegalArgumentException("No se pudo obtener el celular del cliente");
         }
     }
 
-    public Long obtenerIdRestaurante(Long idUsuario, String token) {
-        try {
-            return restClient.get()
-                    .uri("/usuarios/{id}/restaurante", idUsuario)
-                    .header("Authorization", "Bearer " + token)
-                    .retrieve()
-                    .body(Long.class);
-        } catch (HttpClientErrorException e) {
-            throw new IllegalArgumentException("El empleado no está asociado a un restaurante");
-        }
-    }
+
 }
