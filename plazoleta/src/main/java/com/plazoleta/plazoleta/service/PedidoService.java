@@ -6,7 +6,6 @@ import com.plazoleta.plazoleta.config.UsuarioClient;
 import com.plazoleta.plazoleta.dto.PedidoPlatoRequest;
 import com.plazoleta.plazoleta.dto.PedidoRequest;
 import com.plazoleta.plazoleta.dto.PedidoResumen;
-import com.plazoleta.plazoleta.dto.SmsRequest;
 import com.plazoleta.plazoleta.entity.EstadoPedido;
 import com.plazoleta.plazoleta.entity.Pedido;
 import com.plazoleta.plazoleta.entity.PedidoPlato;
@@ -117,13 +116,7 @@ public class PedidoService {
     @Transactional
     public void asignarPedido(Long idPedido, Long idEmpleado, String token) {
 
-        Pedido pedido = pedidoRepository.findById(idPedido)
-                .orElseThrow(() -> new IllegalArgumentException("El pedido no existe"));
-
-        Long idRestauranteEmpleado = usuarioClient.obtenerIdRestaurante(idEmpleado, token);
-        if (!pedido.getIdRestaurante().equals(idRestauranteEmpleado)) {
-            throw new IllegalArgumentException("El pedido no pertenece al restaurante del empleado");
-        }
+        Pedido pedido = buscarPedidoDelRestaurante(idPedido, idEmpleado, token);
 
         if (pedido.getEstado() != EstadoPedido.PENDIENTE) {
             throw new IllegalArgumentException("Solo se pueden asignar pedidos en estado Pendiente");
@@ -138,7 +131,73 @@ public class PedidoService {
     }
 
     @Transactional
-    public void marcarPedidoListo(Long idPedido, Long idEmpleado, String token) {
+    public void marcarListo(Long idPedido, Long idEmpleado, String token) {
+
+        Pedido pedido = buscarPedidoDelRestaurante(idPedido, idEmpleado, token);
+
+        if (pedido.getEstado() != EstadoPedido.EN_PREPARACION) {
+            throw new IllegalArgumentException("Solo se pueden marcar como listos los pedidos en preparación");
+        }
+
+        String pin = String.valueOf(100000 + new Random().nextInt(900000));
+        pedido.setPin(pin);
+        pedido.setEstado(EstadoPedido.LISTO);
+        pedidoRepository.save(pedido);
+
+        String celular = usuarioClient.obtenerCelular(pedido.getIdCliente(), token);
+        notificacionClient.enviarSms(celular,
+                "Tu pedido " + pedido.getId() + " está listo. PIN de entrega: " + pin, token);
+
+        trazabilidadClient.registrar(pedido.getId(), pedido.getIdCliente(), pedido.getIdRestaurante(),
+                idEmpleado, EstadoPedido.EN_PREPARACION.name(), EstadoPedido.LISTO.name(), token);
+    }
+
+    @Transactional
+    public void entregarPedido(Long idPedido, String pin, Long idEmpleado, String token) {
+
+        Pedido pedido = buscarPedidoDelRestaurante(idPedido, idEmpleado, token);
+
+        if (pedido.getEstado() == EstadoPedido.ENTREGADO) {
+            throw new IllegalArgumentException("El pedido ya fue entregado y no admite cambios");
+        }
+        if (pedido.getEstado() != EstadoPedido.LISTO) {
+            throw new IllegalArgumentException("Solo se pueden entregar los pedidos en estado Listo");
+        }
+        if (!pedido.getPin().equals(pin)) {
+            throw new IllegalArgumentException("PIN incorrecto");
+        }
+
+        pedido.setEstado(EstadoPedido.ENTREGADO);
+        pedidoRepository.save(pedido);
+
+        trazabilidadClient.registrar(pedido.getId(), pedido.getIdCliente(), pedido.getIdRestaurante(),
+                idEmpleado, EstadoPedido.LISTO.name(), EstadoPedido.ENTREGADO.name(), token);
+    }
+
+    @Transactional
+    public void cancelarPedido(Long idPedido, Long idCliente, String token) {
+
+        Pedido pedido = pedidoRepository.findById(idPedido)
+                .orElseThrow(() -> new IllegalArgumentException("El pedido no existe"));
+
+        if (!pedido.getIdCliente().equals(idCliente)) {
+            throw new IllegalArgumentException("El pedido no pertenece al cliente autenticado");
+        }
+        if (pedido.getEstado() == EstadoPedido.EN_PREPARACION) {
+            throw new IllegalArgumentException("Lo sentimos, tu pedido ya está en preparación y no puede cancelarse");
+        }
+        if (pedido.getEstado() != EstadoPedido.PENDIENTE) {
+            throw new IllegalArgumentException("El pedido no se puede cancelar en su estado actual");
+        }
+
+        pedido.setEstado(EstadoPedido.CANCELADO);
+        pedidoRepository.save(pedido);
+
+        trazabilidadClient.registrar(pedido.getId(), pedido.getIdCliente(), pedido.getIdRestaurante(),
+                null, EstadoPedido.PENDIENTE.name(), EstadoPedido.CANCELADO.name(), token);
+    }
+
+    private Pedido buscarPedidoDelRestaurante(Long idPedido, Long idEmpleado, String token) {
 
         Pedido pedido = pedidoRepository.findById(idPedido)
                 .orElseThrow(() -> new IllegalArgumentException("El pedido no existe"));
@@ -148,20 +207,6 @@ public class PedidoService {
             throw new IllegalArgumentException("El pedido no pertenece al restaurante del empleado");
         }
 
-        if (pedido.getEstado() != EstadoPedido.EN_PREPARACION) {
-            throw new IllegalArgumentException("El pedido debe estar en preparación para marcarse como listo");
-        }
-
-        String pin = String.format("%06d", new Random().nextInt(1000000));
-        pedido.setPin(pin);
-        pedido.setEstado(EstadoPedido.LISTO);
-        pedidoRepository.save(pedido);
-
-        trazabilidadClient.registrar(pedido.getId(), pedido.getIdCliente(), pedido.getIdRestaurante(),
-                idEmpleado, EstadoPedido.EN_PREPARACION.name(), EstadoPedido.LISTO.name(), token);
-
-        String celular = usuarioClient.obtenerCelular(pedido.getIdCliente(), token);
-        String mensaje = "Tu pedido está listo. Tu PIN de seguridad es: " + pin;
-        notificacionClient.enviarSms(new SmsRequest(celular, mensaje), token);
+        return pedido;
     }
 }
