@@ -4,14 +4,14 @@ Aplicación web basada en microservicios con Java y Spring Boot, gestionada con 
 
 ## Microservicios
 
-| Microservicio | Puerto | Base de datos | Estado |
+| Microservicio | Puerto | Base de datos | Función |
 |---|---|---|---|
-| usuarios | 8081 | usuarios_db | Sprint 1 y 2 |
-| plazoleta | 8082 | plazoleta_db | Sprint 1 y 2 |
-| trazabilidad | - | - | Sprint 3 |
-| notificaciones | - | - | Sprint 3 |
+| usuarios | 8081 | usuarios_db | Usuarios, login con JWT y roles |
+| plazoleta | 8082 | plazoleta_db | Restaurantes, platos y pedidos |
+| trazabilidad | 8083 | trazabilidad_db | Historial de estados y eficiencia |
+| notificaciones | 8084 | ninguna | Envío de SMS (simulado) |
 
-Los microservicios se comunican por REST: `plazoleta` consulta a `usuarios` el rol de un usuario y el restaurante de un empleado, y `usuarios` consulta a `plazoleta` quién es el propietario de un restaurante. Por eso **ambos deben estar en ejecución** al mismo tiempo.
+Los microservicios se comunican por REST y reenvían el token del usuario. Por eso **los cuatro deben estar en ejecución** al mismo tiempo.
 
 ## Requisitos
 
@@ -25,16 +25,17 @@ Los microservicios se comunican por REST: `plazoleta` consulta a `usuarios` el r
    ```sql
    CREATE DATABASE usuarios_db;
    CREATE DATABASE plazoleta_db;
+   CREATE DATABASE trazabilidad_db;
    ```
 2. Definir estas variables de entorno en la configuración de ejecución de cada microservicio:
 
    | Variable | Microservicio | Descripción |
    |---|---|---|
-   | `DB_PASSWORD` | usuarios, plazoleta | Contraseña de MySQL (usuario root) |
-   | `JWT_SECRET` | usuarios, plazoleta | Clave para firmar tokens (mínimo 32 caracteres, la misma en ambos) |
+   | `DB_PASSWORD` | usuarios, plazoleta, trazabilidad | Contraseña de MySQL (usuario root) |
+   | `JWT_SECRET` | los cuatro | Clave para firmar tokens (mínimo 32 caracteres, la misma en todos) |
    | `ADMIN_CLAVE` | usuarios | Clave del administrador inicial (`admin@plazoleta.com`) |
 
-3. Ejecutar `UsuariosApplication` y `PlazoletaApplication`.
+3. Ejecutar `UsuariosApplication`, `PlazoletaApplication`, `TrazabilidadApplication` y `NotificacionesApplication`.
 
 ## Endpoints
 
@@ -62,13 +63,29 @@ Las rutas protegidas requieren el encabezado `Authorization: Bearer <token>` con
 | HU-11 | POST | `plazoleta:8082/pedidos` | Cliente |
 | HU-12 | GET | `plazoleta:8082/pedidos?estado=PENDIENTE&pagina=0&tamanio=10` | Empleado |
 
+### Sprint 3
+
+| HU | Método | Ruta | Rol requerido |
+|---|---|---|---|
+| HU-13 | PATCH | `plazoleta:8082/pedidos/{id}/asignar` | Empleado |
+| HU-14 | PATCH | `plazoleta:8082/pedidos/{id}/listo` | Empleado |
+| HU-15 | PATCH | `plazoleta:8082/pedidos/{id}/entregar` (cuerpo: `pin`) | Empleado |
+| HU-16 | PATCH | `plazoleta:8082/pedidos/{id}/cancelar` | Cliente |
+| HU-17 | GET | `trazabilidad:8083/trazabilidad/pedidos/{idPedido}` | Cliente |
+| HU-18 | GET | `trazabilidad:8083/trazabilidad/eficiencia?idRestaurante=1` | Propietario |
+
+Estados del pedido: `PENDIENTE`, `EN_PREPARACION`, `LISTO`, `ENTREGADO` y `CANCELADO`. Al marcar un pedido como listo se genera un PIN de 6 dígitos que se envía al cliente por SMS (simulado: se imprime en la consola de `notificaciones`).
+
 ### Endpoints de uso interno entre microservicios
 
 | Método | Ruta | Lo consulta |
 |---|---|---|
 | GET | `usuarios:8081/usuarios/{id}/rol` | plazoleta |
 | GET | `usuarios:8081/usuarios/{id}/restaurante` | plazoleta |
-| GET | `plazoleta:8082/restaurantes/{id}/propietario` | usuarios |
+| GET | `usuarios:8081/usuarios/{id}/celular` | plazoleta |
+| GET | `plazoleta:8082/restaurantes/{id}/propietario` | usuarios, trazabilidad |
+| POST | `trazabilidad:8083/trazabilidad` | plazoleta |
+| POST | `notificaciones:8084/notificaciones/sms` | plazoleta |
 
 ## Control de versiones
 
