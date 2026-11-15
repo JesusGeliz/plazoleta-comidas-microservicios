@@ -1,5 +1,6 @@
 package com.plazoleta.plazoleta.controller;
 
+import com.plazoleta.plazoleta.dto.EntregaRequest;
 import com.plazoleta.plazoleta.dto.PedidoRequest;
 import com.plazoleta.plazoleta.dto.PedidoResumen;
 import com.plazoleta.plazoleta.entity.EstadoPedido;
@@ -58,10 +59,28 @@ public class PedidoController {
     }
 
     @PatchMapping("/{id}/listo")
-    public ResponseEntity<String> marcarPedidoListo(@PathVariable Long id, Authentication autenticacion) {
+    public ResponseEntity<String> marcarListo(@PathVariable Long id, Authentication autenticacion) {
         Long idEmpleado = (Long) autenticacion.getPrincipal();
         String token = (String) autenticacion.getCredentials();
-        pedidoService.marcarPedidoListo(id, idEmpleado, token);
-        return ResponseEntity.ok("Pedido marcado como LISTO, PIN generado y SMS enviado");
+        pedidoService.marcarListo(id, idEmpleado, token);
+        return ResponseEntity.ok("Pedido marcado como listo, SMS enviado al cliente");
+    }
+
+    @PatchMapping("/{id}/entregar")
+    public ResponseEntity<String> entregarPedido(@PathVariable Long id,
+                                                 @Valid @RequestBody EntregaRequest request,
+                                                 Authentication autenticacion) {
+        Long idEmpleado = (Long) autenticacion.getPrincipal();
+        String token = (String) autenticacion.getCredentials();
+        pedidoService.entregarPedido(id, request.getPin(), idEmpleado, token);
+        return ResponseEntity.ok("Pedido entregado correctamente");
+    }
+
+    @PatchMapping("/{id}/cancelar")
+    public ResponseEntity<String> cancelarPedido(@PathVariable Long id, Authentication autenticacion) {
+        Long idCliente = (Long) autenticacion.getPrincipal();
+        String token = (String) autenticacion.getCredentials();
+        pedidoService.cancelarPedido(id, idCliente, token);
+        return ResponseEntity.ok("Pedido cancelado correctamente");
     }
 }
