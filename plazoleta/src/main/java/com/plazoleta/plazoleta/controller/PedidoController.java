@@ -5,6 +5,9 @@ import com.plazoleta.plazoleta.dto.PedidoRequest;
 import com.plazoleta.plazoleta.dto.PedidoResumen;
 import com.plazoleta.plazoleta.entity.EstadoPedido;
 import com.plazoleta.plazoleta.service.PedidoService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +23,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+@Tag(name = "Pedidos")
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/pedidos")
 public class PedidoController {
@@ -30,6 +35,7 @@ public class PedidoController {
         this.pedidoService = pedidoService;
     }
 
+    @Operation(summary = "Realizar un pedido (cliente)")
     @PostMapping
     public ResponseEntity<String> crearPedido(@Valid @RequestBody PedidoRequest request,
                                               Authentication autenticacion) {
@@ -39,6 +45,7 @@ public class PedidoController {
         return ResponseEntity.status(HttpStatus.CREATED).body("Pedido creado con id " + id + ", estado PENDIENTE");
     }
 
+    @Operation(summary = "Listar los pedidos del restaurante del empleado por estado")
     @GetMapping
     public ResponseEntity<List<PedidoResumen>> listarPedidos(
             @RequestParam EstadoPedido estado,
@@ -50,6 +57,7 @@ public class PedidoController {
         return ResponseEntity.ok(pedidoService.listarPedidos(estado, pagina, tamanio, idEmpleado, token));
     }
 
+    @Operation(summary = "Asignar un pedido al empleado y pasarlo a En preparación")
     @PatchMapping("/{id}/asignar")
     public ResponseEntity<String> asignarPedido(@PathVariable Long id, Authentication autenticacion) {
         Long idEmpleado = (Long) autenticacion.getPrincipal();
@@ -58,6 +66,7 @@ public class PedidoController {
         return ResponseEntity.ok("Pedido asignado, estado EN_PREPARACION");
     }
 
+    @Operation(summary = "Marcar el pedido como listo y enviar el PIN por SMS")
     @PatchMapping("/{id}/listo")
     public ResponseEntity<String> marcarListo(@PathVariable Long id, Authentication autenticacion) {
         Long idEmpleado = (Long) autenticacion.getPrincipal();
@@ -66,6 +75,7 @@ public class PedidoController {
         return ResponseEntity.ok("Pedido marcado como listo, SMS enviado al cliente");
     }
 
+    @Operation(summary = "Entregar el pedido validando el PIN")
     @PatchMapping("/{id}/entregar")
     public ResponseEntity<String> entregarPedido(@PathVariable Long id,
                                                  @Valid @RequestBody EntregaRequest request,
@@ -76,6 +86,7 @@ public class PedidoController {
         return ResponseEntity.ok("Pedido entregado correctamente");
     }
 
+    @Operation(summary = "Cancelar un pedido pendiente")
     @PatchMapping("/{id}/cancelar")
     public ResponseEntity<String> cancelarPedido(@PathVariable Long id, Authentication autenticacion) {
         Long idCliente = (Long) autenticacion.getPrincipal();
