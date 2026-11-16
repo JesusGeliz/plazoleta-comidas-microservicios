@@ -22,6 +22,7 @@ public class SecurityConfig {
                 .exceptionHandling(e -> e.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .authorizeHttpRequests(auth -> auth
                         .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
+                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/trazabilidad/pedidos/*").hasRole("CLIENTE")
                         .requestMatchers(HttpMethod.GET, "/trazabilidad/eficiencia").hasRole("PROPIETARIO")
                         .anyRequest().authenticated())

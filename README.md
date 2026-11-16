@@ -37,6 +37,23 @@ Los microservicios se comunican por REST y reenvían el token del usuario. Por e
 
 3. Ejecutar `UsuariosApplication`, `PlazoletaApplication`, `TrazabilidadApplication` y `NotificacionesApplication`.
 
+## Documentación de la API (Swagger)
+
+Con los microservicios en ejecución, cada uno publica su documentación interactiva. En **Authorize** se pega el token del login para probar las rutas protegidas.
+
+| Microservicio | Dirección |
+|---|---|
+| usuarios | `http://localhost:8081/swagger-ui/index.html` |
+| plazoleta | `http://localhost:8082/swagger-ui/index.html` |
+| trazabilidad | `http://localhost:8083/swagger-ui/index.html` |
+| notificaciones | `http://localhost:8084/swagger-ui/index.html` |
+
+## Patrón de diseño, algoritmo y pruebas unitarias
+
+- **Patrón Strategy:** el envío del SMS en `notificaciones` usa la interfaz `EnviadorSms` y su implementación `EnviadorSmsSimulado`, intercambiable por un proveedor real.
+- **Algoritmo de ordenamiento:** el ranking de empleados de `trazabilidad` se ordena con `OrdenamientoPorInsercion`, escrito a mano.
+- **Pruebas unitarias (JUnit 5 y Mockito):** `NotificacionServiceTest`, `EnviadorSmsSimuladoTest`, `OrdenamientoPorInsercionTest` y `PedidoServiceTest` (cancelar pedido).
+
 ## Endpoints
 
 Las rutas protegidas requieren el encabezado `Authorization: Bearer <token>` con el token que devuelve el login.
