@@ -8,14 +8,15 @@ import com.plazoleta.trazabilidad.dto.RegistroRequest;
 import com.plazoleta.trazabilidad.entity.RegistroTrazabilidad;
 import com.plazoleta.trazabilidad.repository.RegistroTrazabilidadRepository;
 import org.springframework.stereotype.Service;
+import com.plazoleta.trazabilidad.algoritmo.OrdenamientoPorInsercion;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
 
 @Service
 public class TrazabilidadService {
@@ -108,7 +109,7 @@ public class TrazabilidadService {
             double promedio = (double) suma / entrada.getValue().size();
             ranking.add(new EmpleadoRanking(entrada.getKey(), promedio, entrada.getValue().size()));
         }
-        ranking.sort(Comparator.comparingDouble(EmpleadoRanking::getPromedioSegundos));
+        OrdenamientoPorInsercion.ordenar(ranking);
 
         return new EficienciaResponse(pedidos, ranking);
     }
