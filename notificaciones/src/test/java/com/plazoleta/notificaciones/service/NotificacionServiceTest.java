@@ -1,26 +1,20 @@
-package com.plazoleta.notificaciones.strategy;
+package com.plazoleta.notificaciones.service;
 
+import com.plazoleta.notificaciones.strategy.EnviadorSms;
 import org.junit.jupiter.api.Test;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-class EnviadorSmsSimuladoTest {
+class NotificacionServiceTest {
 
     @Test
-    void imprimeElSmsEnConsola() {
-        ByteArrayOutputStream salida = new ByteArrayOutputStream();
-        PrintStream original = System.out;
-        System.setOut(new PrintStream(salida));
+    void enviarSmsDelegaEnLaEstrategia() {
+        EnviadorSms enviador = mock(EnviadorSms.class);
+        NotificacionService servicio = new NotificacionService(enviador);
 
-        try {
-            new EnviadorSmsSimulado().enviar("+573001234567", "Hola");
-        } finally {
-            System.setOut(original);
-        }
+        servicio.enviarSms("+573001234567", "Tu pedido esta listo");
 
-        assertTrue(salida.toString().contains("SMS simulado a +573001234567: Hola"));
+        verify(enviador).enviar("+573001234567", "Tu pedido esta listo");
     }
 }
