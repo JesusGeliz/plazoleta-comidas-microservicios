@@ -104,6 +104,10 @@ Estados del pedido: `PENDIENTE`, `EN_PREPARACION`, `LISTO`, `ENTREGADO` y `CANCE
 | POST | `trazabilidad:8083/trazabilidad` | plazoleta |
 | POST | `notificaciones:8084/notificaciones/sms` | plazoleta |
 
+## Pruebas funcionales
+
+Las pruebas funcionales de Postman del Sprint 3 (HU 13 a HU 18) están documentadas en [`docs/pruebas-funcionales-sprint-3.md`](docs/pruebas-funcionales-sprint-3.md), con lo esperado y el resultado de cada una.
+
 ## Control de versiones
 
 - `main`: versión estable y entregable.
